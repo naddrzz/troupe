@@ -85,7 +85,8 @@ VERIFICATION_CHECKLIST.md
 /.pi
 /.pi-lens
 /.pi-subagents
-/.agents
+/.agents/*
+!/.agents/environment.json
 .pi-automator-active
 
 # Personal notes & specs (local only)
