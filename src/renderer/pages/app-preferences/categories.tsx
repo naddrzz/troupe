@@ -461,6 +461,13 @@ const ALL_APP_PREF_SEARCH_INDEX: SettingsSearchEntry[] = [
   },
   {
     categoryId: 'server',
+    label: 'Connect another device',
+    description: 'Scan a QR code to open this Troupe server on a phone or tablet.',
+    keywords: ['qr', 'qrcode', 'barcode', 'phone', 'mobile', 'tablet', 'scan', 'connect', 'link'],
+    anchorId: rowId('server-qr')
+  },
+  {
+    categoryId: 'server',
     label: 'Server',
     description: 'Address, port and update channel for this Troupe server.',
     keywords: ['server', 'address', 'port', 'host', 'bind', 'remote', 'restart'],

@@ -62,6 +62,7 @@ pub(super) async fn health_check(
             allow_remote_writes: allow,
             case_insensitive_paths: PATHS_CASE_INSENSITIVE_BY_TARGET,
             setup_required: false,
+            standalone_server: state.server_admin.is_some(),
         }),
     )
 }
@@ -81,6 +82,10 @@ pub(crate) struct HealthBody {
     /// always reports `false` — see [`health_check`].
     #[schemars(description = r#"`true` only while the server runs in first-run setup mode; `false` once it is configured."#)]
     setup_required: bool,
+    /// `true` when served by standalone `troupe-server`; `false` on the
+    /// desktop shared-live host.
+    #[schemars(description = r#"`true` when served by standalone `troupe-server`; `false` on desktop shared-live remote."#)]
+    standalone_server: bool,
 }
 
 /// `GET /host/agent-idle-window` — the live idle-chat window. Same `IpcResult`

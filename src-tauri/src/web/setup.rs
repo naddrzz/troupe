@@ -250,6 +250,7 @@ async fn health_check() -> impl IntoResponse {
             allow_remote_writes: false,
             case_insensitive_paths: PATHS_CASE_INSENSITIVE_BY_TARGET,
             setup_required: true,
+            standalone_server: true,
         }),
     )
 }
@@ -550,6 +551,7 @@ struct HealthBody {
     allow_remote_writes: bool,
     case_insensitive_paths: bool,
     setup_required: bool,
+    standalone_server: bool,
 }
 
 /// `GET /setup/status` response body — `SetupStatusResponse`.

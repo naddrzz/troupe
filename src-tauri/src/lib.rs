@@ -55,6 +55,10 @@ pub mod server_update;
 // standalone binary wiring (server_main.rs `--onboard` branch) is gated by
 // `standalone-server`.
 pub mod onboard;
+// Terminal QR code rendering + `troupe-server qr` CLI + LAN IPv4 detection.
+// Unconditionally compiled so its tests run under default `cargo test`;
+// only the standalone CLI wiring in `server_main.rs` is gated by `standalone-server`.
+pub mod server_qr;
 mod shell_paths;
 // Desktop-side channel manifest fetch for the insider/nightly updater path.
 // Routes the manifest fetch through Rust (reqwest) so CSP/CORS do not block it.

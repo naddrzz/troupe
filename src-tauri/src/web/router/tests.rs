@@ -1555,6 +1555,10 @@ async fn health_reports_no_setup_required_when_onboarded() {
         parsed["setupRequired"], false,
         "a completed server-config.json means the server is onboarded"
     );
+    assert_eq!(
+        parsed["standaloneServer"], true,
+        "standalone router must advertise standaloneServer: true"
+    );
 }
 
 /// Desktop-style state (`server_admin: None`) never probes the file — it
@@ -1577,6 +1581,10 @@ async fn health_reports_no_setup_required_for_desktop_style_state() {
     assert_eq!(
         parsed["setupRequired"], false,
         "desktop shared-live state has no server_admin — the flag stays false"
+    );
+    assert_eq!(
+        parsed["standaloneServer"], false,
+        "desktop shared-live state must report standaloneServer: false"
     );
 }
 
@@ -1649,6 +1657,10 @@ async fn server_config_get_returns_the_effective_answers() {
     assert_eq!(config["projectsFile"], "/srv/termul/projects.json");
     assert_eq!(config["allowRemoteWrites"], false);
     assert_eq!(config["updateIntervalSecs"], 21600);
+    assert!(
+        parsed["data"].get("lanHost").is_none(),
+        "loopback bind must omit lanHost: {parsed}"
+    );
 }
 
 // --- gate + write guard --------------------------------------------------------

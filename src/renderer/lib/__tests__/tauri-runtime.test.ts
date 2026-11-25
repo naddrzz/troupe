@@ -200,6 +200,7 @@ describe('server write-admission capability cache (web branch)', () => {
     expect(snapshot).toEqual({
       admitted: true,
       caseInsensitivePaths: true,
+      standaloneServer: false,
       inFlight: false,
       resolved: true,
       retryTimer: null,
@@ -232,6 +233,7 @@ describe('server write-admission capability cache (desktop branch)', () => {
     expect(snapshot).toEqual({
       admitted: true,
       caseInsensitivePaths: true,
+      standaloneServer: false,
       inFlight: false,
       resolved: true,
       retryTimer: null,
@@ -298,5 +300,42 @@ describe('host path case sensitivity from /health (web branch)', () => {
     await flushMicrotasks()
     expect(listener).toHaveBeenCalled()
     expect(serverPathsCaseInsensitive()).toBe(false)
+  })
+})
+
+describe('standaloneServer capability from /health', () => {
+  beforeEach(() => {
+    __resetServerCapabilityCache()
+    mockFetch.mockReset()
+    setTauriContext(false)
+  })
+
+  afterEach(() => {
+    __resetServerCapabilityCache()
+    setTauriContext(false)
+  })
+
+  it('defaults false until /health reports standaloneServer:true', async () => {
+    expect(getServerCapabilitySnapshot()().standaloneServer).toBe(false)
+    mockFetch.mockResolvedValue(
+      jsonResponse({ status: 'ok', allowRemoteWrites: true, standaloneServer: true })
+    )
+    primeServerCapability()
+    await flushMicrotasks()
+    expect(getServerCapabilitySnapshot()().standaloneServer).toBe(true)
+  })
+
+  it('stays false on desktop shared-live remote (standaloneServer:false) and on Tauri desktop', async () => {
+    mockFetch.mockResolvedValue(
+      jsonResponse({ status: 'ok', allowRemoteWrites: false, standaloneServer: false })
+    )
+    primeServerCapability()
+    await flushMicrotasks()
+    expect(getServerCapabilitySnapshot()().standaloneServer).toBe(false)
+
+    __resetServerCapabilityCache()
+    setTauriContext(true)
+    primeServerCapability()
+    expect(getServerCapabilitySnapshot()().standaloneServer).toBe(false)
   })
 })

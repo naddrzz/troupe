@@ -34,6 +34,11 @@ use crate::web::ws::AppState;
 #[serde(rename_all = "camelCase")]
 pub(crate) struct ServerConfigResponse {
     config: ServerSetupAnswers,
+    /// Detected primary LAN IPv4 address when the server binds `0.0.0.0`, so a
+    /// browser opened on `localhost` on the server machine can still render a
+    /// phone-scannable QR code. Omitted on loopback binds or when undetectable.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    lan_host: Option<String>,
 }
 
 /// `POST /server/config` validation-failure body — the `{ok, fieldErrors}`
@@ -126,8 +131,14 @@ pub(super) async fn server_config_get(State(state): State<AppState>) -> Response
     let Some(admin) = &state.server_admin else {
         return StatusCode::NOT_FOUND.into_response();
     };
+    let lan_host = if BindMode::parse(&admin.current.host) == Some(BindMode::All) {
+        crate::server_qr::detect_lan_ipv4().map(|ip| ip.to_string())
+    } else {
+        None
+    };
     Json(IpcBody::ok(ServerConfigResponse {
         config: admin.current.clone(),
+        lan_host,
     }))
     .into_response()
 }

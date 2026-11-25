@@ -584,6 +584,28 @@ fn write_access_info_public_bind_points_at_token_file_not_logs() {
         !s.contains("service log"),
         "must not direct operators to service logs for the token, got: {s}"
     );
+    assert!(
+        s.contains("troupe-server qr"),
+        "public bind access info must hint at `troupe-server qr`, got: {s}"
+    );
+
+    let mut local_out = Vec::new();
+    write_access_info(
+        &mut local_out,
+        &ServiceManager::Setsid,
+        "127.0.0.1",
+        8080,
+        Path::new("/tmp/state"),
+        false,
+        None,
+        Path::new("/usr/local/bin/troupe-server"),
+        &[],
+    );
+    let local_s = String::from_utf8(local_out).unwrap();
+    assert!(
+        !local_s.contains("troupe-server qr"),
+        "loopback bind must not suggest scanning a phone QR, got: {local_s}"
+    );
 }
 
 #[test]

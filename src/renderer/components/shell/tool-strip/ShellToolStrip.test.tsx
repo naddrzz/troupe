@@ -28,6 +28,9 @@ vi.mock('@/lib/log-api', () => ({ logFrontendError: mockLog }))
 vi.mock('@/components/RemoteAccessPopover', () => ({
   RemoteAccessPopover: () => <button type="button">Remote terminal access</button>
 }))
+vi.mock('@/components/ServerQrPopover', () => ({
+  ServerQrPopover: () => <button type="button">Show server QR code</button>
+}))
 vi.mock('@/components/ConnectionStatusIndicator', () => ({
   ConnectionStatusIndicator: () => <span role="status" aria-label="Connected" />
 }))
@@ -193,11 +196,12 @@ describe('ShellToolStrip', () => {
     )
   })
 
-  it('on web: no Browser and no Remote access, the connection lamp instead', () => {
+  it('on web: no Browser and no Remote access, server QR popover + connection lamp instead', () => {
     tauriRef.current = false
     renderStrip()
     expect(within(strip()).queryByRole('button', { name: 'New browser tab' })).toBeNull()
     expect(within(strip()).queryByText('Remote terminal access')).toBeNull()
+    expect(within(strip()).getByRole('button', { name: 'Show server QR code' })).toBeInTheDocument()
     expect(within(strip()).getByRole('status', { name: 'Connected' })).toBeInTheDocument()
   })
 

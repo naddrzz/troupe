@@ -692,6 +692,10 @@ fn write_access_info<W: Write>(
         "Troupe server is starting in the background on http://localhost:{port}"
     )
     .ok();
+    let exe_name = exe
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("troupe-server");
     if bind_all {
         writeln!(
             stdout,
@@ -708,6 +712,11 @@ fn write_access_info<W: Write>(
             "Web auth: this server requires a token. Read it from the \
              owner-protected file {} (never printed or logged).",
             token_path.display()
+        )
+        .ok();
+        writeln!(
+            stdout,
+            "Connect from a phone: run '{exe_name} qr' in a terminal to show a scannable QR code."
         )
         .ok();
     }
@@ -748,10 +757,6 @@ fn write_access_info<W: Write>(
         )
         .ok();
     }
-    let exe_name = exe
-        .file_name()
-        .and_then(|s| s.to_str())
-        .unwrap_or("troupe-server");
     writeln!(
         stdout,
         "For a foreground run: {exe_name} {}",

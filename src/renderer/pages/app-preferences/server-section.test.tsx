@@ -20,6 +20,10 @@ vi.mock('@/lib/tauri-runtime', () => ({ isTauriContext: () => tauriRef.current }
 vi.mock('@/lib/web-setup-api', () => ({ webSetupApi: api }))
 vi.mock('@/lib/log-api', () => ({ logFrontendError: vi.fn(() => Promise.resolve()) }))
 
+vi.mock('qrcode.react', () => ({
+  QRCodeSVG: ({ value }: { value: string }) => <div data-testid="server-qr" data-value={value} />
+}))
+
 import { ServerSection } from './server-section'
 
 const CONFIG: ServerSetupAnswers = {
@@ -36,7 +40,10 @@ describe('ServerSection', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     tauriRef.current = false
-    api.getServerConfig.mockResolvedValue({ success: true, data: { config: CONFIG } })
+    api.getServerConfig.mockResolvedValue({
+      success: true,
+      data: { config: CONFIG, lanHost: '192.168.1.42' }
+    })
     api.validate.mockResolvedValue({ success: true, data: { ok: true, fieldErrors: {} } })
     api.applyServerConfig.mockResolvedValue({
       success: true,
@@ -51,7 +58,7 @@ describe('ServerSection', () => {
     expect(api.getServerConfig).not.toHaveBeenCalled()
   })
 
-  it('loads the current config and hosts the reconfigure wizard', async () => {
+  it('loads the current config, hosts the reconfigure wizard, and renders the connect QR card', async () => {
     render(<ServerSection />)
 
     await waitFor(() =>
@@ -61,6 +68,10 @@ describe('ServerSection', () => {
     expect(screen.getByLabelText('Port')).toHaveValue(8080)
     // The public-bind config surfaces the remote-writes question.
     expect(screen.getByRole('switch', { name: 'Let other devices make changes' })).toBeChecked()
+    expect(screen.getByText('Connect another device')).toBeInTheDocument()
+    expect(screen.getByTestId('server-qr').getAttribute('data-value')).toBe(
+      'http://192.168.1.42:8080/'
+    )
   })
 
   it('warns that saving restarts the server', async () => {
@@ -73,7 +84,7 @@ describe('ServerSection', () => {
     api.getServerConfig
       .mockReset()
       .mockResolvedValueOnce({ success: false, error: 'nope', code: 'HTTP 404' })
-      .mockResolvedValueOnce({ success: true, data: { config: CONFIG } })
+      .mockResolvedValueOnce({ success: true, data: { config: CONFIG, lanHost: '192.168.1.42' } })
     render(<ServerSection />)
 
     await waitFor(() =>

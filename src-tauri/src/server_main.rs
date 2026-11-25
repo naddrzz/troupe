@@ -75,6 +75,13 @@ fn main() -> ExitCode {
         init_tracing();
         return termul_manager_lib::onboard::run();
     }
+    // `qr`: display a scannable terminal QR code for connecting a phone or
+    // tablet to this standalone server. Handled before `ServerConfig::from_args`
+    // (same pre-bind path as `onboard`); refuses tokenized output on non-TTY.
+    if raw_args.first().is_some_and(|arg| arg == "qr") {
+        init_tracing();
+        return termul_manager_lib::server_qr::run(&raw_args[1..]);
+    }
     // `--internal-mcp-plan-server`: self-spawned child of the host-injected
     // `plan` MCP tool. The agent spawns `current_exe()` with this flag
     // (the injected `McpServer::Stdio`); the child runs an rmcp MCP server over
@@ -694,6 +701,22 @@ fn run_setup_mode(
          Open this one-time URL to configure the server (valid for this boot only):\n\
          \n    {setup_url}{host_hint}\n"
     );
+    // Render a scannable terminal QR ONLY on an interactive TTY when a
+    // reachable LAN IPv4 address is detected (never print QR art into daemon
+    // logs, and never draw an unscannable 0.0.0.0 / 127.0.0.1 QR).
+    if bind_mode == BindMode::All && std::io::IsTerminal::is_terminal(&std::io::stdout()) {
+        if let Some(lan_ip) = termul_manager_lib::server_qr::detect_lan_ipv4() {
+            let lan_setup_url = format!("http://{lan_ip}:{}/?setup={setup_token}", cfg.port);
+            let color = termul_manager_lib::server_qr::terminal_color_enabled(false);
+            if let Ok(qr) = termul_manager_lib::server_qr::render_terminal_qr(&lan_setup_url, color)
+            {
+                println!(
+                    "Or scan from a phone on the same network (http://{lan_ip}:{}/):\n\n{qr}\n",
+                    cfg.port
+                );
+            }
+        }
+    }
     info!("troupe-server: setup mode — configure the server at {setup_url}");
 
     let state = setup::SetupState::new(
@@ -950,6 +973,7 @@ fn usage() -> &'static str {
 USAGE:
     troupe-server [OPTIONS]
     troupe-server onboard          Guided setup + background launch
+    troupe-server qr [OPTIONS]     Show a scannable QR code for connecting a phone
     troupe-server --check-update   One-shot self-update
 
 OPTIONS:
@@ -1109,6 +1133,11 @@ OPTIONS:
                                   logout. Non-TTY stdin prints the resolved
                                   default command + mechanism tip and exits 0
                                   without launching.
+    qr [OPTIONS]                  Display a scannable terminal QR code for
+                                  opening this server on a phone or tablet.
+                                  Embeds #token=... when auth is active (TTY
+                                  only; pass --no-token for non-TTY output).
+                                  Run `troupe-server qr --help` for options.
 
     -h, --help                    Show this help
     -V, --version                 Show the version
@@ -1151,6 +1180,9 @@ EXAMPLES:
 
     # Guided setup (auto-detects systemd or setsid, survives SSH logout)
     troupe-server onboard
+
+    # Show a scannable QR code in an interactive terminal
+    troupe-server qr
 
     # One-shot self-update check
     troupe-server --check-update

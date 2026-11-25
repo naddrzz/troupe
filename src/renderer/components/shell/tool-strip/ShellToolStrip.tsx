@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { ConnectionStatusIndicator } from '@/components/ConnectionStatusIndicator'
 import { Folder2, GitBranch, Github, Globe, type TermulIcon } from '@/components/icons'
 import { RemoteAccessPopover } from '@/components/RemoteAccessPopover'
+import { ServerQrPopover } from '@/components/ServerQrPopover'
 import { toolStripButtonId } from '@/components/shell/column-tab-focus'
 import { logShellEvent } from '@/components/shell/shell-log'
 import { useTopRowPlatform } from '@/components/shell/top-row-context'
@@ -155,14 +156,18 @@ export function ShellToolStrip({
             icon={<Globe size={14} aria-hidden />}
           />
         )}
-        {/* The shared-live host is desktop only; a web client shows its own
-            connection health in that slot. */}
+        {/* The shared-live host is desktop only; a web client shows the
+            standalone server QR popover (when applicable) and its connection
+            health in that slot. */}
         {desktop ? (
           <RemoteAccessPopover />
         ) : (
-          <div className="flex size-8 items-center justify-center">
-            <ConnectionStatusIndicator />
-          </div>
+          <>
+            <ServerQrPopover />
+            <div className="flex size-8 items-center justify-center">
+              <ConnectionStatusIndicator />
+            </div>
+          </>
         )}
       </ToolStrip.Group>
     </ToolStrip>

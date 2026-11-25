@@ -30,6 +30,7 @@ export function isTauriContext(): boolean {
 type ServerCapabilityState = {
   admitted: boolean
   caseInsensitivePaths: boolean
+  standaloneServer: boolean
   inFlight: boolean
   resolved: boolean
   /** Bounded backoff retry timer (cleared on success/reset). `null` when no
@@ -43,10 +44,12 @@ type HealthBody = {
   status?: unknown
   allowRemoteWrites?: unknown
   caseInsensitivePaths?: unknown
+  standaloneServer?: unknown
 }
 let serverCapability: ServerCapabilityState = {
   admitted: false,
   caseInsensitivePaths: true,
+  standaloneServer: false,
   inFlight: false,
   resolved: false,
   retryTimer: null,
@@ -88,6 +91,13 @@ export function serverPathsCaseInsensitive(): boolean {
   return serverCapability.caseInsensitivePaths
 }
 
+/** True iff the web client is connected to a standalone `troupe-server`
+ * (never `true` on Tauri desktop or desktop shared-live remote). */
+export function isStandaloneServer(): boolean {
+  if (isTauriContext()) return false
+  return serverCapability.standaloneServer
+}
+
 /** Prime the remote-write admission cache from `GET /health`. No-op on desktop
  * (always local → writes admitted). Idempotent while a fetch is in-flight; if
  * the last attempt failed (not resolved or resolved false), a later call retries
@@ -100,6 +110,7 @@ export function primeServerCapability(): void {
     serverCapability = {
       admitted: true,
       caseInsensitivePaths: true,
+      standaloneServer: false,
       inFlight: false,
       resolved: true,
       retryTimer: null,
@@ -141,11 +152,13 @@ export function primeServerCapability(): void {
       const statusOk = body?.status === 'ok'
       const admitted = statusOk && body?.allowRemoteWrites === true
       const caseInsensitivePaths = body?.caseInsensitivePaths !== false
+      const standaloneServer = statusOk && body?.standaloneServer === true
       if (admitted) {
         clearRetryTimer()
         serverCapability = {
           admitted: true,
           caseInsensitivePaths,
+          standaloneServer,
           inFlight: false,
           resolved: true,
           retryTimer: null,
@@ -158,6 +171,7 @@ export function primeServerCapability(): void {
         serverCapability = {
           admitted: false,
           caseInsensitivePaths,
+          standaloneServer,
           inFlight: false,
           resolved: true,
           retryTimer: null,
@@ -175,6 +189,7 @@ export function primeServerCapability(): void {
         serverCapability = {
           admitted: false,
           caseInsensitivePaths: true,
+          standaloneServer: false,
           inFlight: false,
           resolved: true,
           retryTimer: null,
@@ -196,6 +211,7 @@ export function primeServerCapability(): void {
       serverCapability = {
         admitted: false,
         caseInsensitivePaths: true,
+        standaloneServer: false,
         inFlight: false,
         resolved: false,
         retryTimer: scheduleRetry(nextCount),
@@ -229,6 +245,7 @@ export function __resetServerCapabilityCache(): void {
   serverCapability = {
     admitted: false,
     caseInsensitivePaths: true,
+    standaloneServer: false,
     inFlight: false,
     resolved: false,
     retryTimer: null,

@@ -120,6 +120,7 @@ import {
   PenTool01Icon,
   PinIcon,
   PlusIcon,
+  QrCodeIcon,
   Redo02Icon,
   RefreshCcwIcon,
   RefreshCwIcon,
@@ -407,3 +408,4 @@ export const SearchList = hugeIcon('SearchList', SearchList01Icon)
 export const Canvas = hugeIcon('Canvas', CanvasIcon)
 export const CalendarClock = hugeIcon('CalendarClock', CalendarClockIcon)
 export const Folder2 = hugeIcon('Folder2', Folder02Icon)
+export const QrCode = hugeIcon('QrCode', QrCodeIcon)

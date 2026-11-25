@@ -17,6 +17,7 @@
 
 import type { ServerSetupAnswers } from '@shared/types/server-setup.types'
 import { useEffect, useState } from 'react'
+import { ServerQrPanel } from '@/components/ServerQrPanel'
 import { rowId } from '@/components/settings/row-id'
 import { SettingsGroup } from '@/components/settings/SettingsGroup'
 import { SettingsSection } from '@/components/settings/SettingsLayout'
@@ -36,6 +37,7 @@ export function ServerSection(): React.JSX.Element | null {
 
 function ServerSectionInner(): React.JSX.Element {
   const [config, setConfig] = useState<ServerSetupAnswers | null>(null)
+  const [lanHost, setLanHost] = useState<string | undefined>(undefined)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
@@ -51,6 +53,7 @@ function ServerSectionInner(): React.JSX.Element {
         if (cancelled) return
         if (res.success) {
           setConfig(res.data.config)
+          setLanHost(res.data.lanHost)
           setLoading(false)
         } else {
           void logFrontendError({
@@ -79,6 +82,20 @@ function ServerSectionInner(): React.JSX.Element {
 
   return (
     <SettingsSection id="server">
+      {config && (
+        <SettingsGroup title="Connect another device">
+          <div id={rowId('server-qr')} className="rounded-lg border border-border bg-card p-4">
+            <p className="text-xs text-muted-foreground mb-3">
+              Scan the QR code to open this Troupe server on a phone or tablet.
+            </p>
+            <ServerQrPanel
+              config={config}
+              lanHost={lanHost}
+              allowWrites={config.allowRemoteWrites}
+            />
+          </div>
+        </SettingsGroup>
+      )}
       <SettingsGroup>
         <SettingsNotice tone="warning">
           Saving these settings restarts the server. You're taken to the new address automatically —

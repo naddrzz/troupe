@@ -270,6 +270,33 @@ pub fn resolve_shared_live(
     resolve(Some(BindMode::All), None, state_dir)
 }
 
+/// Load the persisted bearer token from `<state_dir>/web-auth-token` using the
+/// same symlink-safe, owner-protection validation as [`resolve`].
+///
+/// - `Ok(None)` when the token file does not exist (e.g. an ungated server).
+/// - `Ok(Some(token))` when present and valid.
+/// - `Err(msg)` when present but unreadable, empty, symlinked, or
+///   permission-unsafe (fail closed — never silently drop auth).
+pub(crate) fn load_persisted_token(state_dir: &Path) -> Result<Option<WebAuthToken>, String> {
+    let path = state_dir.join(WEB_AUTH_TOKEN_FILE);
+    match load_token_file(&path) {
+        Ok(contents) => {
+            let token = WebAuthToken::new(&contents).ok_or_else(|| {
+                format!(
+                    "web auth token file '{}' is empty — refusing to trust it",
+                    path.display()
+                )
+            })?;
+            Ok(Some(token))
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(format!(
+            "failed to read web auth token file '{}': {e}",
+            path.display()
+        )),
+    }
+}
+
 /// Percent-encode a fragment value so `URLSearchParams` (what
 /// `web-auth-token.ts` reads) decodes it back byte-for-byte. Generated tokens
 /// are hex and pass through unchanged.

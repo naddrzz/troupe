@@ -110,4 +110,6 @@ export type SetupApplyReply = SetupApplyResponse | SetupApplyRejected
 /** `GET /server/config` — current effective answers for the reconfigure form. */
 export interface ServerConfigResponse {
   config: ServerSetupAnswers
+  /** Detected primary LAN IPv4 when bound to `0.0.0.0`; omitted on loopback or when undetectable. */
+  lanHost?: string
 }

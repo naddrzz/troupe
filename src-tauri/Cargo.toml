@@ -252,6 +252,10 @@ rusqlite = { version = "0.32", features = ["bundled"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
 tokio-util = { version = "0.7", features = ["compat", "rt"] }
 
+# Compact terminal QR rendering for `troupe-server qr` and interactive setup mode.
+# default-features = false keeps it pure Rust with zero image/SVG dependencies.
+qrcode = { version = "0.14", default-features = false }
+
 [dev-dependencies]
 tauri = { version = "2.12.3", features = ["test"] }
 tower = { version = "0.5", features = ["util"] }
